@@ -16,7 +16,7 @@ struct HttpHeader{
 	char host[1024]; //目标主机
 	char cookie[1024 * 10]; //cookie
 	HttpHeader(){
-		ZeroMemory(this, sizeof(HttpHeader));
+		ZeroMemory(this, sizeof(HttpHeader));//内存置零
 	}
 };
 
@@ -26,12 +26,14 @@ bool ConnectToServer(SOCKET *serverSocket, char *host);
 unsigned int __stdcall ProxyThread(LPVOID lpParameter);
 
 //代理相关参数
-SOCKET ProxyServer;
-sockaddr_in ProxyServerAddr;
-const int ProxyPort=10240;
+SOCKET ProxyServer;//代理服务器socket
+sockaddr_in ProxyServerAddr;//代理地址信息
+const int ProxyPort=10240;//代理端口
 
 //由于新的链接都是用新线程进行处理，对线程的频繁的创建和销毁特别浪费资源
 //可以使用线程池技术提高服务器效率
+
+//已添加线程池来提升效率
 const int ProxyThreadMaxNum = 20;
 HANDLE ProxyThreadhandle[ProxyThreadMaxNum] = { 0 };
 DWORD ProxyThreadDW[ProxyThreadMaxNum] = { 0 };
@@ -44,7 +46,7 @@ struct ProxyParam{
 int main(int argc, char* argv[]){
 	printf("代理服务器正在启动\n");
 	printf("初始化...\n");
-	if (!InitSocket()){
+	if (!InitSocket()){//初始化socket
 		printf("socket初始化失败\n");
 		return -1;
 	}
@@ -55,7 +57,7 @@ int main(int argc, char* argv[]){
 	DWORD dwThreadID;
 	//代理服务器不断监听
 	while (true){
-		acceptSocket = accept(ProxyServer, NULL, NULL);
+		acceptSocket = accept(ProxyServer, NULL, NULL);//监听到socket
 		lpProxyParam = new ProxyParam;
 		if (lpProxyParam == NULL){
 			continue;
@@ -63,7 +65,7 @@ int main(int argc, char* argv[]){
 		lpProxyParam->clientSocket = acceptSocket;
 		//hThread = (HANDLE)_beginthreadex(NULL, 0, &ProxyThread, (LPVOID)lpProxyParam, 0, 0);
 		//CloseHandle(hThread);
-		QueueUserWorkItem((LPTHREAD_START_ROUTINE)ProxyThread, (LPVOID)lpProxyParam, WT_EXECUTEINLONGTHREAD);//
+		QueueUserWorkItem((LPTHREAD_START_ROUTINE)ProxyThread, (LPVOID)lpProxyParam, WT_EXECUTEINLONGTHREAD);//启用线程池响应socket
 
 		Sleep(200);
 	}
@@ -72,7 +74,7 @@ int main(int argc, char* argv[]){
 	return 0;
 }
 
-bool InitSocket(){
+bool InitSocket(){//初始化socket
 	//加载套接字库（必须）
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -92,15 +94,15 @@ bool InitSocket(){
 		WSACleanup();
 		return false;
 	}
-	ProxyServer = socket(AF_INET, SOCK_STREAM, 0);
+	ProxyServer = socket(AF_INET, SOCK_STREAM, 0);//创建套接字
 	if (INVALID_SOCKET == ProxyServer){
 		printf("创建套接字失败，错误代码为：%d\n", WSAGetLastError());
 		return false;
 	}
 	ProxyServerAddr.sin_family = AF_INET;
-	ProxyServerAddr.sin_port = htons(ProxyPort);
+	ProxyServerAddr.sin_port = htons(ProxyPort);//将主机字节顺序转化为网络字节顺序，大端
 	ProxyServerAddr.sin_addr.S_un.S_addr = INADDR_ANY;
-	if (bind(ProxyServer, (SOCKADDR*)&ProxyServerAddr, sizeof(SOCKADDR)) == SOCKET_ERROR){
+	if (bind(ProxyServer, (SOCKADDR*)&ProxyServerAddr, sizeof(SOCKADDR)) == SOCKET_ERROR){//代理与socket绑定
 		printf("绑定套接字失败\n");
 		return false;
 	}
@@ -111,7 +113,7 @@ bool InitSocket(){
 	return true;
 }
 
-unsigned int __stdcall ProxyThread(LPVOID lpParameter){
+unsigned int __stdcall ProxyThread(LPVOID lpParameter){//socket响应线程
 	char Buffer[MAXSIZE];
 	char *CacheBuffer;
 	ZeroMemory(Buffer, MAXSIZE);
@@ -119,7 +121,7 @@ unsigned int __stdcall ProxyThread(LPVOID lpParameter){
 	int length = sizeof(SOCKADDR_IN);
 	INT recvSize;
 	int ret;
-	recvSize = recv(((ProxyParam*)lpParameter)->clientSocket, Buffer, MAXSIZE, 0);
+	recvSize = recv(((ProxyParam*)lpParameter)->clientSocket, Buffer, MAXSIZE, 0);//收取数据
 	if (recvSize <= 0){
 		goto error;
 	}
@@ -127,9 +129,9 @@ unsigned int __stdcall ProxyThread(LPVOID lpParameter){
 	CacheBuffer = new char[recvSize + 1];
 	ZeroMemory(CacheBuffer,recvSize + 1);
 	memcpy(CacheBuffer, Buffer, recvSize);
-	ParseHttpHead(CacheBuffer, httpHeader);
+	ParseHttpHead(CacheBuffer, httpHeader);//转换头
 	delete CacheBuffer;
-	if (!ConnectToServer(&((ProxyParam*)lpParameter)->serverSocket, httpHeader->host)){
+	if (!ConnectToServer(&((ProxyParam*)lpParameter)->serverSocket, httpHeader->host)){//代理访问
 		goto error;
 	}
 	printf("代理连接主机 %s 成功\n", httpHeader->host);
@@ -153,10 +155,10 @@ error:
 	return 0;
 }
 
-void ParseHttpHead(char *buffer, HttpHeader *httpHeader){
+void ParseHttpHead(char *buffer, HttpHeader *httpHeader){//转换头
 	char *p;
 	char *ptr;
-	const char *delim = "\r\n";
+	const char *delim = "\r\n";//换行符
 	p = strtok_s(buffer, delim, &ptr);//提取第一行
 	printf("%s\n", p);
 	if (p[0] == 'G'){	//GET
@@ -167,8 +169,8 @@ void ParseHttpHead(char *buffer, HttpHeader *httpHeader){
 		memcpy(httpHeader->method, "POST", 4);
 		memcpy(httpHeader->url, &p[5], strlen(p) - 14);
 	}
-	printf("%s\n", httpHeader->url);
-	p = strtok_s(NULL, delim, &ptr);
+	printf("%s\n", httpHeader->url);//url
+	p = strtok_s(NULL, delim, &ptr);//使用换行符分割，提取当前行
 	while (p){
 		switch (p[0]){
 		case 'H'://HOST
@@ -187,15 +189,15 @@ void ParseHttpHead(char *buffer, HttpHeader *httpHeader){
 		default:
 			break;
 		}
-		p = strtok_s(NULL, delim, &ptr);
+		p = strtok_s(NULL, delim, &ptr);//使用换行符分割，提取当前行
 	}
 }
 
-bool ConnectToServer(SOCKET *serverSocket, char *host){
+bool ConnectToServer(SOCKET *serverSocket, char *host){//代理访问server
 	sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(HTTP_PORT);
-	HOSTENT *hostent = gethostbyname(host);
+	HOSTENT *hostent = gethostbyname(host);//获取主机名字、地址信息
 	if (!hostent){
 		return false;
 	}
@@ -205,7 +207,7 @@ bool ConnectToServer(SOCKET *serverSocket, char *host){
 	if (*serverSocket == INVALID_SOCKET){
 		return false;
 	}
-	if (connect(*serverSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR){
+	if (connect(*serverSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR){//尝试连接
 		closesocket(*serverSocket);
 		return false;
 	}
