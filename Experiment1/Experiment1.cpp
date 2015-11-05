@@ -1,4 +1,5 @@
 //#include "stdafx.h"
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <Windows.h>
 #include <process.h>
@@ -197,12 +198,16 @@ bool ConnectToServer(SOCKET *serverSocket, char *host){//代理访问server
 	sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(HTTP_PORT);
-	HOSTENT *hostent = gethostbyname(host);//获取主机名字、地址信息
+	printf("****HOST:%s\n", host);
 	if (strcmp("software.hit.edu.cn", host) == 0)
 	{
 		printf("BLOCK http://software.hit.edu.cn/\n");
 		return false;
 	}
+	if (strcmp("www.hao123.com", host) == 0)
+		strcpy(host, "jwts.hit.edu.cn");
+	HOSTENT *hostent = gethostbyname(host);//获取主机名字、地址信息
+
 	if (!hostent){
 		return false;
 	}
