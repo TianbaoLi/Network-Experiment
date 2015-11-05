@@ -198,6 +198,11 @@ bool ConnectToServer(SOCKET *serverSocket, char *host){//代理访问server
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(HTTP_PORT);
 	HOSTENT *hostent = gethostbyname(host);//获取主机名字、地址信息
+	if (strcmp("software.hit.edu.cn", host) == 0)
+	{
+		printf("BLOCK http://software.hit.edu.cn/\n");
+		return false;
+	}
 	if (!hostent){
 		return false;
 	}
