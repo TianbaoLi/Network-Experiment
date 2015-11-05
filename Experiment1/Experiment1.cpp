@@ -61,8 +61,10 @@ int main(int argc, char* argv[]){
 			continue;
 		}
 		lpProxyParam->clientSocket = acceptSocket;
-		hThread = (HANDLE)_beginthreadex(NULL, 0, &ProxyThread, (LPVOID)lpProxyParam, 0, 0);
-		CloseHandle(hThread);
+		//hThread = (HANDLE)_beginthreadex(NULL, 0, &ProxyThread, (LPVOID)lpProxyParam, 0, 0);
+		//CloseHandle(hThread);
+		QueueUserWorkItem((LPTHREAD_START_ROUTINE)ProxyThread, (LPVOID)lpProxyParam, WT_EXECUTEINLONGTHREAD);//
+
 		Sleep(200);
 	}
 	closesocket(ProxyServer);
@@ -147,7 +149,7 @@ error:
 	closesocket(((ProxyParam*)lpParameter)->clientSocket);
 	closesocket(((ProxyParam*)lpParameter)->serverSocket);
 	delete lpParameter;
-	_endthreadex(0);
+	//_endthreadex(0);
 	return 0;
 }
 
