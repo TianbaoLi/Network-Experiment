@@ -10,6 +10,9 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="rdt-Client.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7874BE87-2EF7-420D-9DCF-3258040E1994}</ProjectGuid>
     <RootNamespace>Experiment2</RootNamespace>
@@ -63,9 +66,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="rdt-Client.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

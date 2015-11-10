@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 							waitSeq = 1;
 						}
 						//Êä³öÊý¾Ý
-						//printf("%s\n",&buffer[1]);
+						printf("\t{TEXT}\n");
 						buffer[0] = seq;
 						recvSeq = seq;
 						buffer[1] = '\0';
