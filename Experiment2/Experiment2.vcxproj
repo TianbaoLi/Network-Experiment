@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="rdt-Client.cpp" />
+    <ClCompile Include="rdt-Server.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7874BE87-2EF7-420D-9DCF-3258040E1994}</ProjectGuid>
